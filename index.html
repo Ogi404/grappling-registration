@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <title>Grappling Industries SOFIA — Gym Signup</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="config.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">GYM INTEREST LIST · NOT OFFICIAL REGISTRATION</p>
+      <h1>Grappling Industries SOFIA</h1>
+      <p class="muted"><strong>Saturday, December 19, 2026 · Sofia, Bulgaria</strong><br>Want to compete? Add your name to the gym list. Kids, teens and adults welcome.</p><p class="event-info">Normal registration: <strong>€50 by Dec 5</strong> · Late registration: <strong>€75 by Dec 15</strong><br>Includes one Gi + one No-Gi division. Absolute: <strong>€20 per division</strong>.<br><small>Official registration and payment are separate. This form is only for planning our team.</small></p>
+      <a href="https://grapplingindustries.smoothcomp.com/en/event/32871" target="_blank" rel="noopener noreferrer">View competition details ↗</a>
+    </header>
+    <div id="setupWarning" class="notice" role="status" hidden></div>
+    <form id="registration" novalidate>
+      <section class="panel">
+        <div class="section-header"><span class="step">1</span><h2>Athlete</h2></div>
+        <label for="fullName">Full legal name <span class="required">*</span></label>
+        <input id="fullName" name="fullName" autocomplete="name" maxlength="100" required placeholder="First and last name">
+        <label>Date of birth <span class="required">*</span></label>
+        <div class="dob-row">
+          <div><label class="small-label" for="birthDay">Day</label><input id="birthDay" type="number" inputmode="numeric" min="1" max="31" placeholder="DD" required></div>
+          <div><label class="small-label" for="birthMonth">Month</label><select id="birthMonth" required><option value="">Month</option></select></div>
+          <div><label class="small-label" for="birthYear">Year</label><input id="birthYear" type="number" inputmode="numeric" min="1920" max="2100" placeholder="YYYY" required></div>
+        </div>
+        <label for="gender">Division gender <span class="required">*</span></label>
+        <select id="gender" name="gender" required><option value="">Choose…</option><option value="Male">Male</option><option value="Female">Female</option></select>
+        <label for="belt">Current BJJ belt <span class="required">*</span></label>
+        <select id="belt" name="belt" required><option value="">Enter date of birth first</option></select>
+        <label for="weight">Current bodyweight (kg) <span class="required">*</span></label>
+        <input id="weight" name="weightKg" type="number" inputmode="decimal" step="0.1" min="10" max="300" placeholder="e.g. 38.5" required>
+        <p id="ageResult" class="result" aria-live="polite">Enter your birth date to see the age division.</p>
+      </section>
+      <section class="panel">
+        <div class="section-header"><span class="step">2</span><h2>Competition divisions</h2></div>
+        <fieldset class="choice-group"><legend>Which format? <span class="required">*</span></legend>
+          <label class="choice"><input name="format" type="radio" value="Both" checked> <span>Gi + No-Gi <small>Recommended</small></span></label>
+          <label class="choice"><input name="format" type="radio" value="Gi"> <span>Gi only</span></label>
+          <label class="choice"><input name="format" type="radio" value="No-Gi"> <span>No-Gi only</span></label>
+        </fieldset>
+        <label for="ageDivision">Age division <span class="required">*</span></label>
+        <select id="ageDivision" name="ageDivision" required><option value="">Enter birth date first</option></select>
+        <label for="weightDivision">Preferred weight division (kg) <span class="optional">(optional)</span></label>
+        <select id="weightDivision" name="weightDivision"><option value="">Enter birth date, gender and weight first</option></select>
+        <p class="hint" id="weightHint">A preliminary suggestion only. Your coach will confirm the official division; you can leave this blank.</p>
+        <p id="skillResult" class="result subtle" aria-live="polite"></p>
+        <div id="absoluteArea" hidden>
+          <fieldset class="choice-group"><legend>Absolute divisions <span class="optional">(optional; adults only)</span></legend>
+            <label class="choice"><input type="checkbox" id="absoluteGi"> <span>Gi Absolute</span></label>
+            <label class="choice"><input type="checkbox" id="absoluteNoGi"> <span>No-Gi Absolute</span></label>
+          </fieldset>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="section-header"><span class="step">3</span><h2>Contact</h2></div>
+        <div id="guardianArea" hidden>
+          <label for="guardianName">Parent / guardian name <span class="required">*</span></label>
+          <input id="guardianName" name="guardianName" autocomplete="off" maxlength="100" placeholder="Parent or legal guardian">
+        </div>
+        <label for="phone"><span id="phoneLabel">Contact phone / WhatsApp</span> <span class="required">*</span></label>
+        <input id="phone" name="phone" type="tel" autocomplete="tel" maxlength="30" placeholder="+389 …" required>
+        <div id="guardianConsentArea" hidden><label class="consent"><input type="checkbox" id="guardianConsent"> <span>I am the parent/legal guardian, or have their permission to submit this child's details for team coordination.</span></label></div>
+        <label class="consent"><input type="checkbox" id="dataConsent" required> <span>I agree that my details will be shared with the gym's coaches for coordinating competition registration. This is <strong>not</strong> official Smoothcomp registration.</span></label>
+        <div id="formMessage" class="notice" aria-live="polite" hidden></div>
+        <button id="submitButton" type="submit">Send to coach</button>
+        <p class="footer-note">Registration is completed separately through Smoothcomp. This form does not collect payment.</p>
+      </section>
+    </form>
+    <footer>For collecting gym interest only. No payment is taken, and this does not register you on Smoothcomp.</footer>
+  </main>
+</body>
+</html>
