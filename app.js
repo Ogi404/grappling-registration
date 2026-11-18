@@ -9,7 +9,7 @@ const years=dob=>{let n=E.getUTCFullYear()-dob.getUTCFullYear();if(E.getUTCMonth
 const belts=age=>age<16?['White','Grey','Yellow','Orange','Green']:age<18?['White','Blue']:['White','Blue','Purple','Brown','Black'];
 const ageGroups=age=>{if(age<4||age>100)return [];if(age<18){const a=age===16||age===17?[16,17]:[Math.floor((age-4)/2)*2+4,Math.floor((age-4)/2)*2+5];return [(age>=16?'Teens ':'Kids ')+a[0]+'-'+a[1]];}return ['Adult',...(age>=30?['Master']:[]),...(age>=40&&$('gender').value==='Male'?['Senior']:[])];};
 const classes=(age,gender)=>age<16?C.weightClassesKg.kids:age<18?C.weightClassesKg.teens:C.weightClassesKg[gender==='Female'?'female':'male'];
-const kgLabel=(n,over=false)=>(over?'Over ':'Under ')+n.toFixed(2)+' kg';
+const kgLabel=(n,over=false)=>(over?'Over ':'Under ')+'~'+Math.round(n)+' kg';
 const choices=(list,placeholder)=>[{label:placeholder,value:''},...list.map(v=>({label:v,value:v}))];
 function replaceOptions(el,opts,fallback=''){const current=el.value;el.replaceChildren(...opts.map(o=>new Option(o.label,o.value)));el.value=opts.some(o=>o.value===current)?current:fallback;}
 function weightOptions(age,gender,el){if(age===null||!gender){replaceOptions(el,choices([], 'Enter age and gender first'));return;}const vals=classes(age,gender);replaceOptions(el,choices([...vals.map(n=>kgLabel(n)),kgLabel(vals.at(-1),true)],'Choose weight division'));}
@@ -26,7 +26,7 @@ function update(){const d=dob();age=d?years(d):null;const minor=age!==null&&age<
  $('absoluteArea').hidden=!valid||minor;if(minor){$('absoluteGi').checked=false;$('absoluteNoGi').checked=false;}
  weightOptions(age,$('gender').value,$('weightDivision'));updateWeight();updateSkill();
 }
-function updateWeight(){const s=suggestion(age,$('gender').value,Number($('weight').value));$('weightHint').textContent=(s?`Suggested: ${s}. `:'')+'General Grappling Industries kg classes; coach to confirm available event categories.';}
+function updateWeight(){const s=suggestion(age,$('gender').value,Number($('weight').value));$('weightHint').textContent=(s?`Suggested: ${s}. `:'')+'Rounded kg approximations for gym planning. Official weigh-in limits apply with no allowance.';}
 function updateSkill(){$('skillResult').textContent=age!==null&&$('belt').value?`Suggested No-Gi skill: ${skill(age,$('belt').value)}.`:'';}
 function updateFormats(){const f=document.querySelector('input[name="format"]:checked').value;$('absoluteGi').disabled=f==='No-Gi';$('absoluteNoGi').disabled=f==='Gi';if(f==='No-Gi')$('absoluteGi').checked=false;if(f==='Gi')$('absoluteNoGi').checked=false;}
 ['birthDay','birthMonth','birthYear','gender'].forEach(id=>$(id).addEventListener('input',update));$('weight').addEventListener('input',updateWeight);$('belt').addEventListener('change',updateSkill);document.querySelectorAll('input[name="format"]').forEach(e=>e.addEventListener('change',updateFormats));
