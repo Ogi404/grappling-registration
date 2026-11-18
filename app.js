@@ -19,7 +19,6 @@ function message(id,text,kind=''){const el=$(id);el.hidden=!text;el.className='n
 const dob=()=>validDate(+$('birthDay').value,+$('birthMonth').value,+$('birthYear').value);
 let age=null,prevBeltType='';
 function update(){const d=dob();age=d?years(d):null;const minor=age!==null&&age<18;const valid=age!==null&&age>=4&&age<=100&&d<=E;
- $('ageResult').textContent=!d?'Enter date of birth to calculate the age division.':!valid?'Please check the birth date; standard divisions start at age 4.':`Age on event day: ${age} · ${minor?'Kids / teens':'Adult'}`;
  const type=age===null?'':age<16?'kids':age<18?'teens':'adults';if(type!==prevBeltType){prevBeltType=type;replaceOptions($('belt'),choices(type?belts(age):[],type?'Choose belt':'Enter birth date first'));}
  replaceOptions($('ageDivision'),choices(valid?ageGroups(age):[],'Choose age division'),valid?ageGroups(age)[0]:'');
  $('guardianArea').hidden=!minor;$('guardianConsentArea').hidden=!minor;$('guardianName').required=minor;$('guardianConsent').required=minor;
