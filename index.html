@@ -7,23 +7,19 @@
 </head>
 <body><main class="shell">
 <header class="hero">
- <p class="eyebrow">GYM INTEREST LIST · NOT OFFICIAL REGISTRATION</p>
+ <p class="eyebrow">GYM SIGNUP · NOT OFFICIAL REGISTRATION</p>
  <h1>Grappling Industries SOFIA</h1>
  <p class="muted"><strong>Saturday, December 19, 2026 · Sofia, Bulgaria</strong></p>
  <div class="event-info"><strong>Registration information</strong><ul>
-  <li>Normal registration: <strong>€50</strong> — until December 5</li>
-  <li>Late registration: <strong>€75</strong> — until December 15</li>
-  <li>Price includes one Gi and one No-Gi division</li>
+  <li>Normal registration: <strong>€50</strong> — until December 5, 11:59pm</li>
+  <li>Late registration: <strong>€75</strong> — until December 15, 11:59pm</li>
+  <li>Price includes one Gi and one No-Gi division (either or both)</li>
   <li>Absolute: <strong>€20</strong> per division (18+)</li>
-  <li>Official registration and payment are separate from this gym list</li>
+  <li>Official registration and payment are separate from this gym list; limited capacity</li>
  </ul></div>
  <a href="https://grapplingindustries.smoothcomp.com/en/event/32871" target="_blank" rel="noopener noreferrer">Official event page ↗</a>
 </header>
 <div id="setupWarning" class="notice error" hidden></div>
-<div class="mode-tabs" role="group" aria-label="Registration mode">
- <button type="button" id="singleMode" class="mode-button active" aria-pressed="true">Individual athlete</button>
- <button type="button" id="bulkMode" class="mode-button" aria-pressed="false">Coach · Multiple kids</button>
-</div>
 <form id="registration" novalidate>
  <section class="panel"><div class="section-header"><span class="step">1</span><h2>Athlete</h2></div>
   <label for="fullName">Full name <span class="required">*</span></label><input id="fullName" name="fullName" autocomplete="name" maxlength="100" required placeholder="First and last name">
@@ -59,17 +55,5 @@
   <button id="submitButton" type="submit" class="primary">Send to coach</button>
  </section>
 </form>
-<section id="bulkSection" hidden>
- <div class="panel"><div class="section-header"><span class="step">1</span><h2>Coach · Register multiple kids</h2></div>
-  <p class="hint">Add each child below. Each child will appear as a separate row in the gym spreadsheet. This mode is for coaches who have parental permission to share the children's details.</p>
-  <div id="kidsList"></div><button type="button" id="addChild" class="secondary">+ Add another child</button>
- </div>
- <div class="panel"><div class="section-header"><span class="step">2</span><h2>Submit the list</h2></div>
-  <label class="consent"><input id="bulkConsent" type="checkbox"><span>I confirm I have permission from the children's parents/guardians to share these details with the gym coaches for this event.</span></label>
-  <div id="bulkMessage" class="notice" role="status" aria-live="polite" hidden></div>
-  <button type="button" class="primary" id="sendKids">Send kids to coach</button>
-  <p class="hint">No payment is collected. This does not register the children on Smoothcomp.</p>
- </div>
-</section>
 <footer>Gym interest list only · No payments · Official registration is separate</footer>
 </main></body></html>
