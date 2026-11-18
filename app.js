@@ -1,148 +1,72 @@
 (() => {
 'use strict';
-const C = window.REGISTRATION_CONFIG;
-const $ = id => document.getElementById(id);
-const form = $('registration');
-const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-monthNames.forEach((name,i) => $('birthMonth').add(new Option(name,String(i+1))));
-const kidsBelts = ['White','Grey','Yellow','Orange','Green'];
-const adultBelts = ['White','Blue','Purple','Brown','Black'];
-const kidBrackets = [[4,5],[6,7],[8,9],[10,11],[12,13],[14,15],[16,17]];
-const getFormat = () => document.querySelector('input[name="format"]:checked').value;
-let age = null;
-let minor = false;
-let previousBeltType = '';
-function birthDate() {
- const d = +$('birthDay').value, m = +$('birthMonth').value, y = +$('birthYear').value;
- if (!d || !m || !y || y < 1920 || y > 2100) return null;
- const dt = new Date(Date.UTC(y,m-1,d));
- if (dt.getUTCFullYear()!==y || dt.getUTCMonth()!==m-1 || dt.getUTCDate()!==d) return null;
- return dt;
+const C=window.REGISTRATION_CONFIG, $=id=>document.getElementById(id), form=$('registration');
+const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+months.forEach((name,i)=>$('birthMonth').add(new Option(name,String(i+1))));
+const E=new Date(C.eventDate+'T12:00:00Z');
+const validDate=(d,m,y)=>{if(!d||!m||!y||y<1920||y>2026)return null;const v=new Date(Date.UTC(y,m-1,d));return v.getUTCFullYear()===y&&v.getUTCMonth()===m-1&&v.getUTCDate()===d?v:null;};
+const years=dob=>{let n=E.getUTCFullYear()-dob.getUTCFullYear();if(E.getUTCMonth()<dob.getUTCMonth()||(E.getUTCMonth()===dob.getUTCMonth()&&E.getUTCDate()<dob.getUTCDate()))n--;return n;};
+const belts=age=>age<16?['White','Grey','Yellow','Orange','Green']:age<18?['White','Blue']:['White','Blue','Purple','Brown','Black'];
+const ageGroups=age=>{if(age<4||age>100)return [];if(age<18){const a=age===16||age===17?[16,17]:[Math.floor((age-4)/2)*2+4,Math.floor((age-4)/2)*2+5];return [(age>=16?'Teens ':'Kids ')+a[0]+'-'+a[1]];}return ['Adult',...(age>=30?['Master']:[]),...(age>=40&&$('gender').value==='Male'?['Senior']:[])];};
+const classes=(age,gender)=>age<16?C.weightClassesKg.kids:age<18?C.weightClassesKg.teens:C.weightClassesKg[gender==='Female'?'female':'male'];
+const kgLabel=(n,over=false)=>(over?'Over ':'Under ')+n.toFixed(2)+' kg';
+const choices=(list,placeholder)=>[{label:placeholder,value:''},...list.map(v=>({label:v,value:v}))];
+function replaceOptions(el,opts,fallback=''){const current=el.value;el.replaceChildren(...opts.map(o=>new Option(o.label,o.value)));el.value=opts.some(o=>o.value===current)?current:fallback;}
+function weightOptions(age,gender,el){if(age===null||!gender){replaceOptions(el,choices([], 'Enter age and gender first'));return;}const vals=classes(age,gender);replaceOptions(el,choices([...vals.map(n=>kgLabel(n)),kgLabel(vals.at(-1),true)],'Choose weight division'));}
+function suggestion(age,gender,w){if(age===null||!gender||!Number.isFinite(w)||w<=0)return '';const vals=classes(age,gender);const n=vals.find(n=>w<=n);return n===undefined?kgLabel(vals.at(-1),true):kgLabel(n);}
+function skill(age,belt){if(!belt)return '';if(age<16)return ({White:'Beginner',Grey:'Intermediate',Yellow:'Advanced',Orange:'Advanced',Green:'Expert'})[belt];if(age<18)return ({White:'Beginner',Blue:'Advanced'})[belt];return ({White:'Beginner',Blue:'Intermediate',Purple:'Advanced',Brown:'Advanced',Black:'Advanced'})[belt];}
+function message(id,text,kind=''){const el=$(id);el.hidden=!text;el.className='notice '+kind;el.textContent=text;}
+const dob=()=>validDate(+$('birthDay').value,+$('birthMonth').value,+$('birthYear').value);
+let age=null,prevBeltType='';
+function update(){const d=dob();age=d?years(d):null;const minor=age!==null&&age<18;const valid=age!==null&&age>=4&&age<=100&&d<=E;
+ $('ageResult').textContent=!d?'Enter date of birth to calculate the age division.':!valid?'Please check the birth date; standard divisions start at age 4.':`Age on event day: ${age} · ${minor?'Kids / teens':'Adult'}`;
+ const type=age===null?'':age<16?'kids':age<18?'teens':'adults';if(type!==prevBeltType){prevBeltType=type;replaceOptions($('belt'),choices(type?belts(age):[],type?'Choose belt':'Enter birth date first'));}
+ replaceOptions($('ageDivision'),choices(valid?ageGroups(age):[],'Choose age division'),valid?ageGroups(age)[0]:'');
+ $('guardianArea').hidden=!minor;$('guardianConsentArea').hidden=!minor;$('guardianName').required=minor;$('guardianConsent').required=minor;
+ if(!minor)$('guardianConsent').checked=false;
+ $('absoluteArea').hidden=!valid||minor;if(minor){$('absoluteGi').checked=false;$('absoluteNoGi').checked=false;}
+ weightOptions(age,$('gender').value,$('weightDivision'));updateWeight();updateSkill();
 }
-function eventDate() {
- if (!/^\d{4}-\d{2}-\d{2}$/.test(C.eventDate)) return null;
- const [y,m,d] = C.eventDate.split('-').map(Number);
- const dt = new Date(Date.UTC(y,m-1,d));
- return dt.getUTCFullYear()===y && dt.getUTCMonth()===m-1 && dt.getUTCDate()===d ? dt : null;
-}
-function yearsOld(dob,at) {
- let a=at.getUTCFullYear()-dob.getUTCFullYear();
- if (at.getUTCMonth()<dob.getUTCMonth() || (at.getUTCMonth()===dob.getUTCMonth() && at.getUTCDate()<dob.getUTCDate())) a--;
- return a;
-}
-function setOptions(el, items, value) {
- const old = value===undefined ? el.value : value;
- el.replaceChildren(...items.map(item => new Option(item.label,item.value)));
- if (items.some(item=>item.value===old)) el.value=old;
-}
-function warning(message,style='') {
- const el=$('formMessage'); el.hidden=!message; el.textContent=message; el.className='notice '+style;
-}
-function beltsUpdate() {
- const type=age===null?'':(age<18?'kid':'adult');
- if (type===previousBeltType) return;
- previousBeltType=type;
- const belts=type==='kid'?kidsBelts:type==='adult'?adultBelts:[];
- setOptions($('belt'),[{label:type?'Choose belt':'Enter date of birth first',value:''},...belts.map(x=>({label:x,value:x}))], '');
-}
-function updateAge() {
- const dob=birthDate(), at=eventDate(); age=dob&&at?yearsOld(dob,at):null;
- minor=age!==null && age<18;
- const active=age!==null && age>=4 && age<=100 && dob<=at;
- $('ageResult').textContent=!at?'Event date is not configured yet. Division calculation will work when the coach enters it.' : !dob?'Enter your full date of birth to calculate your division.' : !active?'No standard division can be suggested for this age. Please speak to your coach.' : `Age on competition day: ${age}. ${minor?'Kids / teens':'Adult'} competitor.`;
- beltsUpdate();
- const ageOptions=[{label:'Choose division',value:''}];
- if(active) {
-  if(minor) {
-   const group=kidBrackets.find(([lo,hi])=>age>=lo&&age<=hi);
-   if(group) ageOptions.push({label:`Kids ${group[0]}–${group[1]} years`,value:`Kids ${group[0]}-${group[1]}`});
-  } else {
-   ageOptions.push({label:'Adult (18+)',value:'Adult'});
-   if(age>=30) ageOptions.push({label:'Master (30+)',value:'Master'});
-   if(age>=40 && $('gender').value==='Male') ageOptions.push({label:'Senior (40+)',value:'Senior'});
-  }
- }
- const prev=$('ageDivision').value;
- setOptions($('ageDivision'),ageOptions,ageOptions.some(x=>x.value===prev)?prev:(ageOptions[1]?.value||''));
- $('guardianArea').hidden=!minor; $('guardianConsentArea').hidden=!minor;
- $('guardianName').required=minor;
- $('guardianConsent').required=minor;
- if(!minor) $('guardianConsent').checked=false;
- $('phoneLabel').textContent=minor?'Parent / guardian phone / WhatsApp':'Contact phone / WhatsApp';
- $('absoluteArea').hidden=!active||minor;
- if (minor) {$('absoluteGi').checked=false;$('absoluteNoGi').checked=false;}
- updateWeight(); updateFormats(); updateSkill();
-}
-function formatDisplay(n) {return n.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2});}
-function updateWeight() {
- const old=$('weightDivision').value;
- const gender=$('gender').value;
- const classes=age===null?null:(minor?C.weightClassesKg.kids:(gender==='Female'?C.weightClassesKg.female:gender==='Male'?C.weightClassesKg.male:null));
- const opts=[{label:(!classes||!gender)?'Enter age and gender first':'Choose weight division',value:''}];
- if(classes&&gender) {
-  classes.forEach(n=>opts.push({value:`Under ${formatDisplay(n)} kg`,label:`Under ${formatDisplay(n)} kg`}));
-  opts.push({value:`Over ${formatDisplay(classes.at(-1))} kg`,label:`Over ${formatDisplay(classes.at(-1))} kg`});
- }
- const kg=parseFloat($('weight').value);
- let recommended='';
- if(Number.isFinite(kg)&&kg>0&&classes?.length) {
-  const x=classes.find(n=>kg<=n);
-  recommended=x===undefined?`Over ${formatDisplay(classes.at(-1))} kg`:`Under ${formatDisplay(x)} kg`;
- }
- setOptions($('weightDivision'),opts,old&&opts.some(x=>x.value===old)?old:'');
- $('weightHint').textContent=(C.eventDivisionsVerified?'':'PROVISIONAL classes converted into kg — exact event classes NOT verified. ') + (recommended?`Possible class: ${recommended}. `:'') + 'Optional: leave blank and your coach will choose the official class.';
-}
-function updateFormats() {
- const f=getFormat();
- $('absoluteGi').disabled=f==='No-Gi'; $('absoluteNoGi').disabled=f==='Gi';
- if(f==='No-Gi') $('absoluteGi').checked=false;
- if(f==='Gi') $('absoluteNoGi').checked=false;
-}
-function updateSkill() {
- const b=$('belt').value; if(!b){$('skillResult').textContent='';return;}
- let skill='';
- if(minor) skill=({White:'Beginner',Grey:'Intermediate',Yellow:'Advanced',Orange:'Advanced',Green:'Expert'})[b];
- else skill=({White:'Beginner',Blue:'Intermediate',Purple:'Advanced',Brown:'Advanced',Black:'Advanced'})[b];
- $('skillResult').textContent=`Suggested No-Gi skill category: ${skill}. Your coach can review or adjust this.`;
-}
-['birthDay','birthMonth','birthYear','gender'].forEach(id=>$(id).addEventListener('input',updateAge));
-$('weight').addEventListener('input',updateWeight);$('belt').addEventListener('change',updateSkill);
-document.querySelectorAll('input[name="format"]').forEach(el=>el.addEventListener('change',updateFormats));
-const missing=[];
-if(!eventDate()) missing.push('competition date');
-if(!C.appsScriptUrl) missing.push('Google Sheets endpoint');
-// Unverified classes do not block a gym interest list; the coach will finalize divisions.
-if(missing.length) {
- $('setupWarning').hidden=false;
- $('setupWarning').textContent=`Setup required before sharing: ${missing.join(', ')}. This preview cannot submit registrations yet.`;
-}
-form.addEventListener('submit',async event=>{
- event.preventDefault(); warning('');
- if(missing.length){warning('Coach setup is incomplete. This preview cannot collect registrations.','error');return;}
- const dob=birthDate(), at=eventDate();
- if(!dob||!at||age===null||age<4||age>100){warning('Enter a valid birth date for an eligible competitor.','error');return;}
- if(!form.checkValidity()||!$('ageDivision').value){form.reportValidity();warning('Please complete all required fields.','error');return;}
- if(minor&&!$('guardianConsent').checked){warning('Parent/guardian acknowledgement is required for children.','error');return;}
- const submit=$('submitButton');submit.disabled=true;submit.textContent='Sending…';
- const payload={
-  eventId:'32871',eventName:C.eventName,
-  fullName:$('fullName').value.trim(),dob:dob.toISOString().slice(0,10),ageOnEvent:age,
-  gender:$('gender').value,belt:$('belt').value,weightKg:Number($('weight').value),
-  ageDivision:$('ageDivision').value,weightDivision:$('weightDivision').value,
-  format:getFormat(),absoluteGi:$('absoluteGi').checked,absoluteNoGi:$('absoluteNoGi').checked,
-  guardianName:minor?$('guardianName').value.trim():'',phone:$('phone').value.trim(),guardianConsent:minor?$('guardianConsent').checked:false,
-  dataConsent:$('dataConsent').checked,source:'gym-form-v1'
- };
- if(!payload.fullName||!payload.phone||!payload.dataConsent){warning('Name, contact and consent are required.','error');submit.disabled=false;submit.textContent='Send to coach';return;}
- try {
-  // Apps Script ContentService redirects lack CORS response headers. Opaque POST permits delivery,
-  // but the browser cannot verify the server's success. Never claim confirmed storage.
-  await fetch(C.appsScriptUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
-  form.reset();updateAge();updateWeight();
-  warning('Submission request sent. Ask your coach to confirm that your entry appears on the team list. This is not official Smoothcomp registration.','success');
-  $('formMessage').scrollIntoView({behavior:'smooth',block:'center'});
- } catch(err) {warning('Could not send your details. Check your connection and try again, or contact your coach.','error');}
- finally{submit.disabled=false;submit.textContent='Send to coach';}
+function updateWeight(){const s=suggestion(age,$('gender').value,Number($('weight').value));$('weightHint').textContent=(s?`Suggested: ${s}. `:'')+'General Grappling Industries kg classes; coach to confirm available event categories.';}
+function updateSkill(){$('skillResult').textContent=age!==null&&$('belt').value?`Suggested No-Gi skill: ${skill(age,$('belt').value)}.`:'';}
+function updateFormats(){const f=document.querySelector('input[name="format"]:checked').value;$('absoluteGi').disabled=f==='No-Gi';$('absoluteNoGi').disabled=f==='Gi';if(f==='No-Gi')$('absoluteGi').checked=false;if(f==='Gi')$('absoluteNoGi').checked=false;}
+['birthDay','birthMonth','birthYear','gender'].forEach(id=>$(id).addEventListener('input',update));$('weight').addEventListener('input',updateWeight);$('belt').addEventListener('change',updateSkill);document.querySelectorAll('input[name="format"]').forEach(e=>e.addEventListener('change',updateFormats));
+const base={eventId:'32871',eventName:C.eventName};
+async function transmit(payload){await fetch(C.appsScriptUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});}
+function showMode(bulk){$('registration').hidden=bulk;$('bulkSection').hidden=!bulk;for(const [id,active] of [['singleMode',!bulk],['bulkMode',bulk]]){$(id).classList.toggle('active',active);$(id).setAttribute('aria-pressed',String(active));}}
+$('singleMode').addEventListener('click',()=>showMode(false));$('bulkMode').addEventListener('click',()=>showMode(true));
+form.addEventListener('submit',async ev=>{ev.preventDefault();message('formMessage','');const d=dob();if(!d||age===null||age<4||age>100){message('formMessage','Enter a valid date of birth.','error');return;}
+ if(!form.checkValidity()||!$('ageDivision').value){form.reportValidity();message('formMessage','Please complete all required fields.','error');return;}
+ if(age<18&&!$('guardianConsent').checked){message('formMessage','Parent/guardian permission is required.','error');return;}
+ const payload={...base,fullName:$('fullName').value.trim(),dob:d.toISOString().slice(0,10),ageOnEvent:age,gender:$('gender').value,belt:$('belt').value,weightKg:Number($('weight').value),ageDivision:$('ageDivision').value,weightDivision:$('weightDivision').value,format:document.querySelector('input[name="format"]:checked').value,absoluteGi:$('absoluteGi').checked,absoluteNoGi:$('absoluteNoGi').checked,guardianName:age<18?$('guardianName').value.trim():'',guardianConsent:age<18?$('guardianConsent').checked:false,dataConsent:$('dataConsent').checked,source:'gym-form-v2'};
+ const button=$('submitButton');button.disabled=true;button.textContent='Sending…';try{await transmit(payload);form.reset();update();message('formMessage','Request sent. Ask your coach to verify it appears in the team sheet.','success');}catch(_){message('formMessage','Could not send. Please try again.','error');}finally{button.disabled=false;button.textContent='Send to coach';}
 });
-updateAge();
+let counter=0;
+function makeKid(){const num=++counter;const card=document.createElement('article');card.className='kid-card';card.innerHTML=`<div class="kid-header"><h3>Child ${num}</h3><button type="button" class="remove-child">Remove</button></div>
+<div class="kid-fields"><div class="wide"><label>Full name *</label><input data-field="name" maxlength="100" placeholder="First and last name" required></div>
+<div><label>Birth day *</label><input data-field="day" type="number" inputmode="numeric" placeholder="DD" min="1" max="31" required></div>
+<div><label>Birth month *</label><select data-field="month" required><option value="">Month</option>${months.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('')}</select></div>
+<div><label>Birth year *</label><input data-field="year" type="number" inputmode="numeric" placeholder="YYYY" min="2008" max="2022" required></div>
+<div><label>Gender *</label><select data-field="gender" required><option value="">Choose…</option><option>Male</option><option>Female</option></select></div>
+<div><label>BJJ belt *</label><select data-field="belt" required><option value="">Enter birth date</option></select></div>
+<div><label>Weight (kg) *</label><input data-field="weight" type="number" inputmode="decimal" step="0.1" min="10" max="300" placeholder="e.g. 38.5" required></div>
+<div><label>Format *</label><select data-field="format"><option value="Both">Gi + No-Gi</option><option value="Gi">Gi only</option><option value="No-Gi">No-Gi only</option></select></div>
+<div class="wide"><label>Preferred weight division (optional)</label><select data-field="division"><option value="">Enter birth date</option></select></div></div><div class="result kid-result" aria-live="polite">Enter date of birth to see division.</div>`;
+ const f=name=>card.querySelector(`[data-field="${name}"]`);let currentType='';
+ const compute=()=>{const d=validDate(+f('day').value,+f('month').value,+f('year').value),a=d?years(d):null,valid=a!==null&&a>=4&&a<=17&&d<=E;
+ const type=valid?(a<16?'kids':'teens'):'';if(type!==currentType){currentType=type;replaceOptions(f('belt'),choices(valid?belts(a):[],valid?'Choose belt':'Enter birth date'));}
+ weightOptions(valid?a:null,f('gender').value,f('division'));
+ card.querySelector('.kid-result').textContent=valid?`Age ${a} · ${ageGroups(a)[0]}${f('belt').value?' · No-Gi '+skill(a,f('belt').value):''}${suggestion(a,f('gender').value,Number(f('weight').value))?' · Suggested '+suggestion(a,f('gender').value,Number(f('weight').value)):''}`:d?'Only ages 4–17 are supported in the kids list.':'Enter date of birth to see division.';};
+ card.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',compute));card.querySelector('.remove-child').addEventListener('click',()=>{card.remove();if(!$('kidsList').children.length)makeKid();});$('kidsList').appendChild(card);compute();}
+$('addChild').addEventListener('click',makeKid);makeKid();
+$('sendKids').addEventListener('click',async()=>{message('bulkMessage','');if(!$('bulkConsent').checked){message('bulkMessage','Confirm you have parental permission first.','error');return;}
+ const entries=[];const cards=[...$('kidsList').children];if(cards.length>40){message('bulkMessage','Send up to 40 kids in one batch.','error');return;}
+ for(let i=0;i<cards.length;i++){const card=cards[i],f=name=>card.querySelector(`[data-field="${name}"]`);for(const el of card.querySelectorAll('input[required],select[required]')){if(!el.checkValidity()){el.reportValidity();message('bulkMessage',`Check child ${i+1}: required information is missing or invalid.`,'error');return;}}
+ const d=validDate(+f('day').value,+f('month').value,+f('year').value),a=d?years(d):null;if(a===null||a<4||a>17){message('bulkMessage',`Check child ${i+1}: date of birth must give age 4–17 on event day.`,'error');return;}
+ entries.push({...base,fullName:f('name').value.trim(),dob:d.toISOString().slice(0,10),ageOnEvent:a,gender:f('gender').value,belt:f('belt').value,weightKg:Number(f('weight').value),ageDivision:ageGroups(a)[0],weightDivision:f('division').value,format:f('format').value,absoluteGi:false,absoluteNoGi:false,guardianName:'',guardianConsent:true,dataConsent:true,source:'coach-bulk-v2'});
+ }
+ const button=$('sendKids');button.disabled=true;button.textContent='Sending…';try{await transmit({eventId:'32871',coachBulk:true,entries});$('kidsList').replaceChildren();makeKid();$('bulkConsent').checked=false;message('bulkMessage',`Request sent for ${entries.length} children. Check your private sheet for all rows before considering them received.`,'success');}catch(_){message('bulkMessage','Could not send the batch; please try again.','error');}finally{button.disabled=false;button.textContent='Send kids to coach';}
+});
+if(!C.appsScriptUrl||!Number.isFinite(E.getTime())){message('setupWarning','Configuration incomplete. Form submissions are unavailable.','error');$('setupWarning').hidden=false;$('submitButton').disabled=true;$('sendKids').disabled=true;}
+update();updateFormats();
 })();
